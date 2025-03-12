@@ -46281,7 +46281,7 @@ while(true)switch(s){case 0:q.dx.sl(0,!0)
 p=q.dy
 p===$&&A.a()
 s=2
-return A.P(p.w3(0.5),$async$i0)
+return A.P(p.w3(1.2),$async$i0)
 case 2:s=3
 return A.P(q.dy.w0(1),$async$i0)
 case 3:o=q.dy
