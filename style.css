@@ -1,0 +1,257 @@
+/* =========================================================================
+   Live Static Preview — dark theme + resizable CSS-grid layout
+   ========================================================================= */
+
+:root {
+  /* Palette (GitHub-dark inspired) */
+  --bg:        #0d1117;
+  --bg-elev:   #161b22;
+  --bg-elev-2: #1c2230;
+  --border:    #2a313c;
+  --text:      #e6edf3;
+  --text-dim:  #8b949e;
+  --accent:    #58a6ff;
+  --red:       #ff7b72;
+  --yellow:    #e3b341;
+  --green:     #3fb950;
+
+  --pane-head-h: 36px;
+  --gutter-size: 7px;
+  --radius: 8px;
+
+  /* Resizable track sizes. These custom properties are the single source of
+     truth for the grid layout; the drag handles in app.js rewrite them. */
+  --ws-col: 1fr;   /* editors column width            (workspace) */
+  --ed-r1:  1fr;   /* HTML editor height              (editors)   */
+  --ed-r2:  1fr;   /* CSS  editor height              (editors)   */
+  --ed-r3:  1fr;   /* JS   editor height              (editors)   */
+  --pv-row: 1fr;   /* preview height                  (preview)   */
+  --cs-row: 220px; /* console height                  (preview)   */
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* the workspace owns its own scrolling */
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, var(--bg-elev-2), var(--bg-elev));
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .logo { color: var(--accent); font-size: 20px; line-height: 1; }
+.brand h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+.actions { display: flex; align-items: center; gap: 14px; }
+.hint { color: var(--text-dim); font-size: 12px; }
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-ghost { background: transparent; padding: 3px 9px; }
+.btn:focus-visible,
+.gutter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Workspace grid: editors | gutter | preview ──────────────────────── */
+.workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--ws-col) var(--gutter-size) 1fr;
+  overflow: hidden;
+}
+
+/* Editors column: HTML | gutter | CSS | gutter | JS */
+.editors {
+  display: grid;
+  grid-template-rows:
+    var(--ed-r1) var(--gutter-size)
+    var(--ed-r2) var(--gutter-size)
+    var(--ed-r3);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Preview column: preview | gutter | console */
+.preview-col {
+  display: grid;
+  grid-template-rows: var(--pv-row) var(--gutter-size) var(--cs-row);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+}
+
+/* ── Panes ───────────────────────────────────────────────────────────── */
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-elev);
+}
+.pane + .pane { border-top: 1px solid var(--border); }
+
+.pane-head {
+  flex: 0 0 var(--pane-head-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: var(--bg-elev-2);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+/* Push trailing items (meta text, Clear button) to the right edge. */
+.pane-head-meta,
+.pane-head .btn { margin-left: auto; }
+.pane-head-meta { text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 11px; }
+
+/* Language dots in the editor headers */
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.dot-html { background: #e34c26; }
+.dot-css  { background: #2965f1; }
+.dot-js   { background: #f0db4f; }
+
+/* ── Editor host (CodeMirror fills it) ───────────────────────────────── */
+.editor-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.cm-editor { height: 100%; font-size: 13px; }
+.cm-editor .cm-scroller { overflow: auto; }
+.cm-editor.cm-focused { outline: none; }
+
+/* ── Preview ─────────────────────────────────────────────────────────── */
+.preview-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff; /* preview pages assume a default white canvas */
+}
+
+/* ── Console ─────────────────────────────────────────────────────────── */
+.console-output {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas,
+    monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 2px 0;
+}
+.console-entry {
+  display: flex;
+  gap: 10px;
+  padding: 3px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.console-entry .lvl {
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding-top: 2px;
+  opacity: .8;
+  min-width: 34px;
+}
+.console-entry .msg { flex: 1 1 auto; }
+.console-entry.lvl-log   { color: var(--text); }
+.console-entry.lvl-info  { color: var(--accent); }
+.console-entry.lvl-debug { color: var(--text-dim); }
+.console-entry.lvl-warn  { color: var(--yellow); background: rgba(227, 179, 65, 0.06); }
+.console-entry.lvl-error { color: var(--red);    background: rgba(255, 123, 114, 0.08); }
+.console-empty { color: var(--text-dim); padding: 8px 12px; font-style: italic; }
+
+/* ── Drag handles (real grid tracks) ─────────────────────────────────── */
+.gutter {
+  background: var(--border);
+  position: relative;
+  z-index: 3;
+  touch-action: none; /* let Pointer Events drive the drag, not scrolling */
+  transition: background .12s ease;
+}
+.gutter:hover,
+.gutter.dragging { background: var(--accent); }
+.gutter-col { cursor: col-resize; }
+.gutter-row { cursor: row-resize; }
+/* Widen the invisible hit area beyond the 7px visual track for easy grabbing */
+.gutter::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}
+
+/* ── Custom scrollbars (dark) ────────────────────────────────────────── */
+.console-output::-webkit-scrollbar,
+.cm-scroller::-webkit-scrollbar { width: 10px; height: 10px; }
+.console-output::-webkit-scrollbar-thumb,
+.cm-scroller::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.console-output::-webkit-scrollbar-thumb:hover,
+.cm-scroller::-webkit-scrollbar-thumb:hover { background: #3d444d; }
+
+/* ── Responsive: stack everything into one scrolling column ──────────── */
+@media (max-width: 860px) {
+  body { overflow: auto; height: auto; min-height: 100%; }
+  .hint { display: none; }
+
+  /* Collapse the grids to a simple vertical flow and drop the drag handles. */
+  .workspace,
+  .editors,
+  .preview-col {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .preview-col { border-left: 0; }
+  .gutter { display: none; }
+
+  .pane { flex: 0 0 auto; height: 300px; border-top: 1px solid var(--border); }
+  .preview-pane { height: 380px; }
+  .console-pane { height: 220px; }
+}
