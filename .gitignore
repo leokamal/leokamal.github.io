@@ -1,0 +1,14 @@
+# Dependencies (only used if you opt into the Vite path)
+node_modules/
+dist/
+.vite/
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
