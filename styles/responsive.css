@@ -1,0 +1,22 @@
+/* Responsive: collapse the three grids into one scrolling column on narrow
+   screens. Imported LAST so this media query overrides the layout rules. */
+
+@media (max-width: 860px) {
+  body { overflow: auto; height: auto; min-height: 100%; }
+  .hint { display: none; }
+
+  /* Collapse the grids to a simple vertical flow and drop the drag handles. */
+  .workspace,
+  .editors,
+  .preview-col {
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+  .preview-col { border-left: 0; }
+  .gutter { display: none; }
+
+  .pane { flex: 0 0 auto; height: 300px; border-top: 1px solid var(--border); }
+  .preview-pane { height: 380px; }
+  .console-pane { height: 220px; }
+}

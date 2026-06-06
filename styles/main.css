@@ -1,0 +1,23 @@
+/* =============================================================================
+   Live Static Preview — stylesheet entry point.
+
+   Import ORDER == cascade order, so these run general -> specific:
+     tokens  → design variables (no rules)
+     base    → reset, document, scrollbars, focus
+     layout  → CSS grid + drag handles
+     components, editor, console → painted UI
+     responsive → must come LAST so its media query overrides the above
+
+   (We intentionally avoid @layer here: CodeMirror injects UNLAYERED styles at
+   runtime, and unlayered rules beat any @layer, so our editor overrides must
+   stay unlayered too. For production these files would be concatenated into one
+   request — see the README.)
+   ============================================================================= */
+
+@import url("./tokens.css");
+@import url("./base.css");
+@import url("./layout.css");
+@import url("./components.css");
+@import url("./editor.css");
+@import url("./console.css");
+@import url("./responsive.css");

@@ -1,0 +1,16 @@
+/* Editor host + CodeMirror overrides.
+
+   These stay UNLAYERED (see main.css): CodeMirror injects its base theme as an
+   unlayered <style> at runtime, and unlayered rules outrank any @layer, so our
+   overrides must be unlayered to win on normal specificity/source order. */
+
+.editor-host {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.cm-editor { height: 100%; font-size: 13px; }
+.cm-editor .cm-scroller { overflow: auto; }
+.cm-editor.cm-focused { outline: none; }

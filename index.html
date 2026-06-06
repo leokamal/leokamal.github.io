@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Live Static Preview</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="styles/main.css" />
 
     <!--
       No build step: CodeMirror 6 is published as many small ES-module packages.
-      We load them straight from the esm.sh CDN through an import map, so `app.js`
-      can `import` them by their bare package names with no bundler.
+      We load them straight from the esm.sh CDN through an import map, so the
+      modules under src/ can `import` them by their bare package names with no
+      bundler. (Import maps are page-global, so every module resolves through it.)
 
       `?deps=@codemirror/state@6,@codemirror/view@6` pins the shared peer
       dependencies to a single version across every package. CM6 stores editor
@@ -45,7 +46,8 @@
     <!--
       Layout is a CSS grid. Resizable boundaries are real grid tracks: each
       `.gutter` element sits in its own track, and dragging it rewrites a CSS
-      custom property on the parent grid (see style.css + the resizer in app.js).
+      custom property on the parent grid (see styles/layout.css +
+      src/layout/ResizableGrid.js).
     -->
     <main class="workspace" id="workspace">
       <!-- ── Editors column (HTML / CSS / JS stacked) ───────────────────── -->
@@ -84,11 +86,12 @@
             <span class="pane-head-meta">sandboxed iframe · allow-scripts</span>
           </div>
           <!--
-            SECURITY-CRITICAL. Full reasoning lives in app.js next to the code
-            that fills this frame. In short: sandbox="allow-scripts" runs the
-            user's JS but deliberately OMITS allow-same-origin, so the preview
-            executes in an opaque ("null") origin and cannot reach this page's
-            DOM, cookies, or storage. Never add allow-same-origin here.
+            SECURITY-CRITICAL. Full reasoning lives in
+            src/preview/PreviewRenderer.js next to the code that fills this
+            frame. In short: sandbox="allow-scripts" runs the user's JS but
+            deliberately OMITS allow-same-origin, so the preview executes in an
+            opaque ("null") origin and cannot reach this page's DOM, cookies, or
+            storage. Never add allow-same-origin here.
           -->
           <iframe
             id="preview"
@@ -111,6 +114,6 @@
       </section>
     </main>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
 </html>

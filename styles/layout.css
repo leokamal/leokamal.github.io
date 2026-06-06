@@ -1,0 +1,53 @@
+/* CSS-grid skeleton and the draggable handles between tracks. */
+
+/* Workspace grid: editors | gutter | preview */
+.workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--ws-c1) var(--gutter-size) var(--ws-c2);
+  overflow: hidden;
+}
+
+/* Editors column: HTML | gutter | CSS | gutter | JS */
+.editors {
+  display: grid;
+  grid-template-rows:
+    var(--ed-r1) var(--gutter-size)
+    var(--ed-r2) var(--gutter-size)
+    var(--ed-r3);
+  min-width: 0;
+  /* fr tracks can otherwise be sized by their content (the editor) and refuse
+     to shrink; min-height:0 on the panes lets them shrink freely. */
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Preview column: preview | gutter | console */
+.preview-col {
+  display: grid;
+  grid-template-rows: var(--pv-r1) var(--gutter-size) var(--pv-r2);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--border);
+}
+
+/* Drag handles — each is a real grid track. */
+.gutter {
+  background: var(--border);
+  position: relative;
+  z-index: 3;
+  touch-action: none; /* let Pointer Events drive the drag, not scrolling */
+  transition: background .12s ease;
+}
+.gutter:hover,
+.gutter.dragging { background: var(--accent); }
+.gutter-col { cursor: col-resize; }
+.gutter-row { cursor: row-resize; }
+/* Widen the invisible hit area beyond the visual track for easy grabbing. */
+.gutter::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+}

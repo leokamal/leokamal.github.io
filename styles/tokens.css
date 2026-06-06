@@ -1,0 +1,32 @@
+/* Design tokens — the single source of truth for colour, spacing, and the
+   resizable grid track sizes. */
+
+:root {
+  /* Palette (GitHub-dark inspired) */
+  --bg:        #0d1117;
+  --bg-elev:   #161b22;
+  --bg-elev-2: #1c2230;
+  --border:    #2a313c;
+  --text:      #e6edf3;
+  --text-dim:  #8b949e;
+  --accent:    #58a6ff;
+  --red:       #ff7b72;
+  --yellow:    #e3b341;
+  --green:     #3fb950;
+
+  --pane-head-h: 36px;
+  --gutter-size: 7px;
+  --radius: 8px;
+
+  /* Resizable track sizes. These custom properties are the single source of
+     truth for the grid layout; ResizableGrid rewrites them as the user drags.
+     They are kept in `fr` units so the layout stays proportional when the
+     window resizes, and a drag only moves the boundary between two neighbours. */
+  --ws-c1: 1fr;    /* editors column width            (workspace) */
+  --ws-c2: 1fr;    /* preview column width            (workspace) */
+  --ed-r1: 1fr;    /* HTML editor height              (editors)   */
+  --ed-r2: 1fr;    /* CSS  editor height              (editors)   */
+  --ed-r3: 1fr;    /* JS   editor height              (editors)   */
+  --pv-r1: 2.4fr;  /* preview height                  (preview)   */
+  --pv-r2: 1fr;    /* console height                  (preview)   */
+}

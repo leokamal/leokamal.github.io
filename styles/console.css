@@ -1,0 +1,39 @@
+/* Console panel: log list and per-level colouring. */
+
+.console-output {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas,
+    monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 2px 0;
+}
+
+.console-entry {
+  display: flex;
+  gap: 10px;
+  padding: 3px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.console-entry .lvl {
+  flex: 0 0 auto;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  padding-top: 2px;
+  opacity: .8;
+  min-width: 34px;
+}
+.console-entry .msg { flex: 1 1 auto; }
+
+.console-entry.lvl-log   { color: var(--text); }
+.console-entry.lvl-info  { color: var(--accent); }
+.console-entry.lvl-debug { color: var(--text-dim); }
+.console-entry.lvl-warn  { color: var(--yellow); background: rgba(227, 179, 65, 0.06); }
+.console-entry.lvl-error { color: var(--red);    background: rgba(255, 123, 114, 0.08); }
+
+.console-empty { color: var(--text-dim); padding: 8px 12px; font-style: italic; }
