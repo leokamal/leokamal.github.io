@@ -1,12 +1,13 @@
 /**
- * Starter content shown on first load and restored by the "Reset" button.
+ * Demo content loaded by the "Load example" button. The editors themselves
+ * start empty (with translated placeholders); this is opt-in sample code.
  * @module config/defaults
  */
 
 /** @typedef {{ html: string, css: string, js: string }} Sources */
 
 /** @type {Readonly<Sources>} */
-export const STARTER_SOURCES = Object.freeze({
+export const EXAMPLE_SOURCES = Object.freeze({
   html: [
     "<h1>Hello 👋</h1>",
     "<p>Edit HTML, CSS, and JS — the preview updates live.</p>",

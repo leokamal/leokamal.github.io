@@ -30,7 +30,7 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border-left: 1px solid var(--border);
+  border-inline-start: 1px solid var(--border); /* logical: flips for RTL */
 }
 
 /* Drag handles — each is a real grid track. */

@@ -33,6 +33,67 @@
 .btn:hover { border-color: var(--accent); }
 .btn-ghost { background: transparent; padding: 3px 9px; }
 
+/* Language switcher. */
+.lang-select {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 26px 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  /* Chevron drawn as a background image so the control stays compact. */
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+                    linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position: right 12px center, right 7px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+[dir="rtl"] .lang-select {
+  padding: 5px 10px 5px 26px;
+  background-position: left 12px center, left 7px center;
+}
+.lang-select:hover { border-color: var(--accent); }
+.lang-select option { color: #111; }
+
+/* ── Editor toolbar (copy / paste / clear) ────────────────────────────── */
+.pane-actions { display: flex; align-items: center; gap: 2px; }
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color .12s, background .12s, border-color .12s;
+}
+.icon-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+.icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Transient feedback flashes after an action (set briefly from JS). */
+.icon-btn--ok  { color: var(--green); border-color: var(--green); }
+.icon-btn--err { color: var(--red);   border-color: var(--red); }
+
+.icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The inline icon sprite is definitions only — never displayed. */
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
 /* ── Panes ────────────────────────────────────────────────────────────── */
 .pane {
   display: flex;
@@ -59,9 +120,11 @@
   border-bottom: 1px solid var(--border);
   user-select: none;
 }
-/* Push trailing items (meta text, Clear button) to the right edge. */
+/* Push trailing items (meta text, actions, Clear button) to the far edge.
+   `margin-inline-start` is logical, so it flips correctly under RTL. */
 .pane-head-meta,
-.pane-head .btn { margin-left: auto; }
+.pane-head .btn,
+.pane-actions { margin-inline-start: auto; }
 .pane-head-meta { text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 11px; }
 
 /* Language dots in the editor headers. */

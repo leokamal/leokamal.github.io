@@ -1,9 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- lang/dir default to French; the inline script below + src/i18n correct them
+     from the saved preference before first paint to avoid an RTL flash. -->
+<html lang="fr" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Live Static Preview</title>
+    <title>Aperçu statique en direct</title>
+
+    <!-- Anti-FOUC: apply the saved language's direction before CSS paints.
+         Mirrors the storage key + RTL set used by src/i18n. -->
+    <script>
+      try {
+        var lspLang = localStorage.getItem("lsp:lang") || "fr";
+        document.documentElement.lang = lspLang;
+        document.documentElement.dir = lspLang === "ar" ? "rtl" : "ltr";
+      } catch (e) {}
+    </script>
+
     <link rel="stylesheet" href="styles/main.css" />
 
     <!--
@@ -22,6 +35,8 @@
       {
         "imports": {
           "codemirror": "https://esm.sh/codemirror@6?deps=@codemirror/state@6,@codemirror/view@6",
+          "@codemirror/state": "https://esm.sh/@codemirror/state@6",
+          "@codemirror/view": "https://esm.sh/@codemirror/view@6?deps=@codemirror/state@6",
           "@codemirror/lang-html": "https://esm.sh/@codemirror/lang-html@6?deps=@codemirror/state@6,@codemirror/view@6",
           "@codemirror/lang-css": "https://esm.sh/@codemirror/lang-css@6?deps=@codemirror/state@6,@codemirror/view@6",
           "@codemirror/lang-javascript": "https://esm.sh/@codemirror/lang-javascript@6?deps=@codemirror/state@6,@codemirror/view@6",
@@ -32,14 +47,41 @@
   </head>
 
   <body>
+    <!-- Inline icon sprite (referenced by <use> in the editor toolbars). -->
+    <svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0">
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </symbol>
+      <symbol id="i-paste" viewBox="0 0 24 24">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+        <rect x="8" y="2" width="8" height="4" rx="1"></rect>
+      </symbol>
+      <symbol id="i-clear" viewBox="0 0 24 24">
+        <path d="M3 6h18"></path>
+        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+      </symbol>
+    </svg>
+
     <header class="topbar">
       <div class="brand">
         <span class="logo" aria-hidden="true">◧</span>
-        <h1>Live Static Preview</h1>
+        <h1 data-i18n="app.title">Aperçu statique en direct</h1>
       </div>
       <div class="actions">
-        <span class="hint">Edits render live · ~300&nbsp;ms debounce</span>
-        <button id="reset-btn" class="btn" type="button">Reset</button>
+        <span class="hint" data-i18n="header.hint">Rendu en direct · anti-rebond ~300&nbsp;ms</span>
+
+        <!-- Language switcher. Option labels stay in their native script. -->
+        <select id="lang-select" class="lang-select" data-i18n-title="lang.switchLabel">
+          <option value="fr">Français</option>
+          <option value="ar">العربية</option>
+          <option value="en">English</option>
+        </select>
+
+        <button id="load-example" class="btn" type="button" data-i18n="action.loadExample">
+          Charger l'exemple
+        </button>
       </div>
     </header>
 
@@ -52,24 +94,48 @@
     <main class="workspace" id="workspace">
       <!-- ── Editors column (HTML / CSS / JS stacked) ───────────────────── -->
       <section class="editors" id="editors" aria-label="Code editors">
-        <div class="pane editor-pane">
-          <div class="pane-head"><span class="dot dot-html"></span>HTML</div>
+        <div class="pane editor-pane" data-editor="html">
+          <div class="pane-head">
+            <span class="dot dot-html"></span>
+            <span class="pane-title">HTML</span>
+            <div class="pane-actions">
+              <button class="icon-btn" type="button" data-action="copy"  data-editor="html" data-i18n-title="action.copy"><svg class="icon"><use href="#i-copy"></use></svg></button>
+              <button class="icon-btn" type="button" data-action="paste" data-editor="html" data-i18n-title="action.paste"><svg class="icon"><use href="#i-paste"></use></svg></button>
+              <button class="icon-btn" type="button" data-action="clear" data-editor="html" data-i18n-title="action.clear"><svg class="icon"><use href="#i-clear"></use></svg></button>
+            </div>
+          </div>
           <div class="editor-host" id="editor-html"></div>
         </div>
 
         <div class="gutter gutter-row" data-resizer="ed1" role="separator"
              aria-orientation="horizontal" tabindex="0"></div>
 
-        <div class="pane editor-pane">
-          <div class="pane-head"><span class="dot dot-css"></span>CSS</div>
+        <div class="pane editor-pane" data-editor="css">
+          <div class="pane-head">
+            <span class="dot dot-css"></span>
+            <span class="pane-title">CSS</span>
+            <div class="pane-actions">
+              <button class="icon-btn" type="button" data-action="copy"  data-editor="css" data-i18n-title="action.copy"><svg class="icon"><use href="#i-copy"></use></svg></button>
+              <button class="icon-btn" type="button" data-action="paste" data-editor="css" data-i18n-title="action.paste"><svg class="icon"><use href="#i-paste"></use></svg></button>
+              <button class="icon-btn" type="button" data-action="clear" data-editor="css" data-i18n-title="action.clear"><svg class="icon"><use href="#i-clear"></use></svg></button>
+            </div>
+          </div>
           <div class="editor-host" id="editor-css"></div>
         </div>
 
         <div class="gutter gutter-row" data-resizer="ed2" role="separator"
              aria-orientation="horizontal" tabindex="0"></div>
 
-        <div class="pane editor-pane">
-          <div class="pane-head"><span class="dot dot-js"></span>JavaScript</div>
+        <div class="pane editor-pane" data-editor="js">
+          <div class="pane-head">
+            <span class="dot dot-js"></span>
+            <span class="pane-title">JavaScript</span>
+            <div class="pane-actions">
+              <button class="icon-btn" type="button" data-action="copy"  data-editor="js" data-i18n-title="action.copy"><svg class="icon"><use href="#i-copy"></use></svg></button>
+              <button class="icon-btn" type="button" data-action="paste" data-editor="js" data-i18n-title="action.paste"><svg class="icon"><use href="#i-paste"></use></svg></button>
+              <button class="icon-btn" type="button" data-action="clear" data-editor="js" data-i18n-title="action.clear"><svg class="icon"><use href="#i-clear"></use></svg></button>
+            </div>
+          </div>
           <div class="editor-host" id="editor-js"></div>
         </div>
       </section>
@@ -82,8 +148,8 @@
       <section class="preview-col" id="preview-col" aria-label="Preview and console">
         <div class="pane preview-pane">
           <div class="pane-head">
-            <span>Preview</span>
-            <span class="pane-head-meta">sandboxed iframe · allow-scripts</span>
+            <span data-i18n="preview.title">Aperçu</span>
+            <span class="pane-head-meta" data-i18n="preview.meta">iframe isolé · allow-scripts</span>
           </div>
           <!--
             SECURITY-CRITICAL. Full reasoning lives in
@@ -106,8 +172,8 @@
 
         <div class="pane console-pane">
           <div class="pane-head">
-            <span>Console</span>
-            <button id="clear-console" class="btn btn-ghost" type="button">Clear</button>
+            <span data-i18n="console.title">Console</span>
+            <button id="clear-console" class="btn btn-ghost" type="button" data-i18n="console.clear">Effacer</button>
           </div>
           <div class="console-output" id="console-output" aria-live="polite"></div>
         </div>

@@ -60,6 +60,17 @@ export class ResizableGrid {
     return this.#horizontal ? rect.width : rect.height;
   }
 
+  /**
+   * On a horizontal split in an RTL document the x-axis is mirrored, so a
+   * rightward pointer move should shrink (not grow) the "before" track. Read
+   * the live computed direction so a language switch is honoured immediately.
+   * @returns {1 | -1}
+   */
+  #directionFactor() {
+    if (!this.#horizontal) return 1;
+    return getComputedStyle(this.#container).direction === "rtl" ? -1 : 1;
+  }
+
   /** Pixels-per-fr and the fr floor for a handle's current neighbour pair. */
   #metrics(handle) {
     const px = this.#sizeOf(handle.beforePane) + this.#sizeOf(handle.afterPane);
@@ -94,10 +105,11 @@ export class ResizableGrid {
     const startBefore = this.#fr[handle.before];
     const startAfter = this.#fr[handle.after];
     const { pxPerFr, minFr } = this.#metrics(handle);
+    const dirFactor = this.#directionFactor();
 
     const onMove = (ev) => {
-      const delta = (this.#horizontal ? ev.clientX : ev.clientY) - startPos;
-      const df = delta / pxPerFr;
+      const raw = (this.#horizontal ? ev.clientX : ev.clientY) - startPos;
+      const df = (raw * dirFactor) / pxPerFr;
       this.#moveBoundary(handle, startBefore + df, startAfter - df, minFr);
     };
     const onUp = () => {
@@ -120,7 +132,8 @@ export class ResizableGrid {
     e.preventDefault();
 
     const { pxPerFr, minFr } = this.#metrics(handle);
-    const df = (KEYBOARD_RESIZE_STEP_PX / pxPerFr) * (dir === 0 ? -1 : 1);
+    const df =
+      (KEYBOARD_RESIZE_STEP_PX / pxPerFr) * (dir === 0 ? -1 : 1) * this.#directionFactor();
     this.#moveBoundary(handle, this.#fr[handle.before] + df, this.#fr[handle.after] - df, minFr);
   }
 }

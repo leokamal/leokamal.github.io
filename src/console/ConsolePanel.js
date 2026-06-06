@@ -5,8 +5,6 @@
 
 import { CONSOLE_LEVELS } from "../config/constants.js";
 
-const EMPTY_TEXT = "Console output from the preview appears here.";
-
 /**
  * Renders captured console/error messages. Output is always written with
  * `textContent` (never `innerHTML`) so untrusted preview strings can't inject
@@ -15,16 +13,31 @@ const EMPTY_TEXT = "Console output from the preview appears here.";
 export class ConsolePanel {
   /** @type {HTMLElement} */
   #output;
+  /** @type {string} */
+  #emptyText;
 
   /**
    * @param {object} options
    * @param {HTMLElement} options.output         scrolling log container
    * @param {HTMLElement|null} [options.clearButton]  optional "Clear" button
+   * @param {string} [options.emptyText]         empty-state message (i18n)
    */
-  constructor({ output, clearButton }) {
+  constructor({ output, clearButton, emptyText = "" }) {
     this.#output = output;
+    this.#emptyText = emptyText;
     clearButton?.addEventListener("click", () => this.clear());
     this.clear();
+  }
+
+  /**
+   * Update the empty-state message (e.g. on language change) and refresh it if
+   * it's currently visible.
+   * @param {string} text
+   */
+  setEmptyText(text) {
+    this.#emptyText = text;
+    const placeholder = this.#output.querySelector(".console-empty");
+    if (placeholder) placeholder.textContent = text;
   }
 
   /** Reset to the empty-state placeholder. */
@@ -32,7 +45,7 @@ export class ConsolePanel {
     this.#output.replaceChildren();
     const empty = document.createElement("div");
     empty.className = "console-empty";
-    empty.textContent = EMPTY_TEXT;
+    empty.textContent = this.#emptyText;
     this.#output.append(empty);
   }
 

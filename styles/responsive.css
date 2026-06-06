@@ -13,7 +13,7 @@
     flex-direction: column;
     overflow: visible;
   }
-  .preview-col { border-left: 0; }
+  .preview-col { border-inline-start: 0; }
   .gutter { display: none; }
 
   .pane { flex: 0 0 auto; height: 300px; border-top: 1px solid var(--border); }

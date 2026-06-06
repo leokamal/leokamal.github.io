@@ -24,3 +24,9 @@ export const CONSOLE_CHANNEL = "__previewConsole";
 
 /** Console levels we recognise, in display order. */
 export const CONSOLE_LEVELS = Object.freeze(["log", "info", "warn", "error", "debug"]);
+
+/**
+ * localStorage key for the chosen UI language. Also referenced by the inline
+ * anti-FOUC script in index.html, so keep the two in sync.
+ */
+export const LANG_STORAGE_KEY = "lsp:lang";

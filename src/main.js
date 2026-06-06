@@ -7,9 +7,11 @@
  * @module main
  */
 
-import { STARTER_SOURCES } from "./config/defaults.js";
+import { EXAMPLE_SOURCES } from "./config/defaults.js";
 import { PREVIEW_DEBOUNCE_MS } from "./config/constants.js";
 import { debounce } from "./utils/debounce.js";
+import { copyText, readClipboardText } from "./utils/clipboard.js";
+import { I18n } from "./i18n/I18n.js";
 import { EditorManager } from "./editors/EditorManager.js";
 import { PreviewRenderer } from "./preview/PreviewRenderer.js";
 import { ConsolePanel } from "./console/ConsolePanel.js";
@@ -18,10 +20,27 @@ import { ResizableGrid } from "./layout/ResizableGrid.js";
 function bootstrap() {
   const byId = (id) => document.getElementById(id);
 
+  // i18n first so every component can be built with the right language. The
+  // onChange callback pushes non-DOM text (placeholders, console empty-state)
+  // into the components that own it. `editors`/`consolePanel` are referenced
+  // lazily here and only invoked from apply() below, after they exist.
+  const i18n = new I18n({
+    onChange: (_lang, dict) => {
+      editors.setPlaceholders({
+        html: dict["placeholder.html"],
+        css: dict["placeholder.css"],
+        js: dict["placeholder.js"],
+      });
+      consolePanel.setEmptyText(dict["console.empty"]);
+    },
+  });
+  const dict = i18n.dict();
+
   // Console panel — renders messages forwarded from the preview.
   const consolePanel = new ConsolePanel({
     output: byId("console-output"),
     clearButton: byId("clear-console"),
+    emptyText: dict["console.empty"],
   });
 
   // Preview — owns the sandboxed iframe; clears the console before each run and
@@ -32,23 +51,71 @@ function bootstrap() {
     onConsoleMessage: (message) => consolePanel.append(message),
   });
 
-  // Editors — a doc edit schedules a debounced re-render of the preview.
+  // Editors — start empty with translated placeholders; a doc edit schedules a
+  // debounced re-render of the preview.
   const editors = new EditorManager({
     mounts: { html: byId("editor-html"), css: byId("editor-css"), js: byId("editor-js") },
-    sources: STARTER_SOURCES,
+    sources: { html: "", css: "", js: "" },
+    placeholders: {
+      html: dict["placeholder.html"],
+      css: dict["placeholder.css"],
+      js: dict["placeholder.js"],
+    },
     onChange: debounce(() => preview.render(editors.getSources()), PREVIEW_DEBOUNCE_MS),
   });
 
-  // Toolbar.
-  byId("reset-btn").addEventListener("click", () => {
-    editors.setSources(STARTER_SOURCES);
+  wireLanguageSwitcher(byId("lang-select"), i18n);
+  wireEditorActions(editors, i18n);
+
+  // Toolbar: load the demo into the editors.
+  byId("load-example").addEventListener("click", () => {
+    editors.setSources(EXAMPLE_SOURCES);
     preview.render(editors.getSources());
   });
 
   setupResizableLayout();
 
-  // First paint.
-  preview.render(editors.getSources());
+  i18n.apply(); // first translation pass (also fires onChange)
+  preview.render(editors.getSources()); // first paint (empty until the user types)
+}
+
+/** Bind the <select> to the i18n controller and keep it in sync. */
+function wireLanguageSwitcher(select, i18n) {
+  select.value = i18n.lang;
+  select.addEventListener("change", () => {
+    i18n.setLang(select.value);
+    select.value = i18n.lang; // reflect rejected/unknown choices
+  });
+}
+
+/**
+ * Wire every editor toolbar button (copy / paste / clear) to its editor and
+ * give brief visual feedback on success/failure.
+ */
+function wireEditorActions(editors, i18n) {
+  for (const btn of document.querySelectorAll(".icon-btn[data-action]")) {
+    btn.addEventListener("click", async () => {
+      const kind = btn.dataset.editor;
+      try {
+        if (btn.dataset.action === "copy") {
+          await copyText(editors.getSource(kind));
+        } else if (btn.dataset.action === "paste") {
+          editors.insertText(kind, await readClipboardText());
+        } else if (btn.dataset.action === "clear") {
+          editors.clear(kind);
+        }
+        flash(btn, "icon-btn--ok");
+      } catch {
+        flash(btn, "icon-btn--err");
+      }
+    });
+  }
+}
+
+/** Add a state class for a moment to acknowledge an action. */
+function flash(el, className) {
+  el.classList.add(className);
+  setTimeout(() => el.classList.remove(className), 600);
 }
 
 /** Attach drag-resize behaviour to the three grid containers. */

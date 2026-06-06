@@ -14,3 +14,6 @@
 .cm-editor { height: 100%; font-size: 13px; }
 .cm-editor .cm-scroller { overflow: auto; }
 .cm-editor.cm-focused { outline: none; }
+
+/* Placeholder ghost text shown while an editor is empty. */
+.cm-editor .cm-placeholder { color: var(--text-dim); font-style: italic; }
