@@ -93,6 +93,79 @@ function setEditor(view, text) {
   });
 }
 
+// ── Console + error bridge (runs INSIDE the preview) ─────────────────────────
+//
+// This snippet is injected as the FIRST script in the preview so it is active
+// before any user HTML/JS runs. It mirrors console.* and uncaught errors back
+// to this page via postMessage. It is plain ES5 (no bundler touches it) and
+// must not contain the literal sequence that closes a script tag.
+const CONSOLE_BRIDGE = `
+(function () {
+  "use strict";
+
+  // JSON.stringify replacer that survives circular refs, DOM nodes, functions.
+  function replacer() {
+    var seen = new WeakSet();
+    return function (key, value) {
+      if (typeof value === "function") return "ƒ " + (value.name || "anonymous") + "()";
+      if (typeof value === "bigint") return value.toString() + "n";
+      if (typeof value === "symbol") return value.toString();
+      if (value instanceof Error) return value.name + ": " + value.message;
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) return "[Circular]";
+        seen.add(value);
+        if (typeof Node !== "undefined" && value instanceof Node) {
+          return "<" + String(value.nodeName || "node").toLowerCase() + ">";
+        }
+      }
+      return value;
+    };
+  }
+
+  function format(value) {
+    if (typeof value === "string") return value;
+    if (typeof value === "undefined") return "undefined";
+    if (value instanceof Error) return value.stack || (value.name + ": " + value.message);
+    if (typeof value === "function") return value.toString();
+    try { return JSON.stringify(value, replacer(), 2); }
+    catch (e) { return String(value); }
+  }
+
+  function send(level, parts) {
+    var text;
+    try { text = Array.prototype.map.call(parts, format).join(" "); }
+    catch (e) { text = "[unserializable log]"; }
+    if (text.length > 5000) text = text.slice(0, 5000) + "… (truncated)";
+    try {
+      // The sandbox gives us an opaque origin, so we cannot know the parent's
+      // origin to target it precisely; "*" is acceptable because we only ever
+      // send non-sensitive console/error text outward.
+      parent.postMessage({ __previewConsole: true, level: level, text: text }, "*");
+    } catch (e) { /* parent gone / serialization failed — ignore */ }
+  }
+
+  ["log", "info", "warn", "error", "debug"].forEach(function (level) {
+    var original = console[level] ? console[level].bind(console) : null;
+    console[level] = function () {
+      send(level, arguments);
+      if (original) original.apply(console, arguments); // keep native devtools working
+    };
+  });
+
+  // Surface runtime errors instead of failing silently.
+  window.addEventListener("error", function (e) {
+    if (!e) return;
+    var where = e.filename ? " (" + (e.lineno || 0) + ":" + (e.colno || 0) + ")" : "";
+    send("error", ["Uncaught " + (e.message || "error") + where]);
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    var r = e ? e.reason : undefined;
+    var msg = (r && r.message) ? r.message : (typeof r === "undefined" ? "(no reason)" : String(r));
+    send("error", ["Unhandled promise rejection: " + msg]);
+  });
+})();
+`;
+
 // ── Building the preview document ─────────────────────────────────────────────
 
 /**
@@ -101,6 +174,10 @@ function setEditor(view, text) {
  * `</script>` is written as `<\/script>` so the string is robust even if this
  * file is ever inlined into an HTML <script> block (the backslash is a no-op in
  * a normal JS string but stops an HTML parser from closing the tag early).
+ *
+ * The console bridge is the FIRST script in <head> so console.* overrides and
+ * the error listeners are installed before any user code (or inline handlers)
+ * can run.
  */
 function buildPreviewDocument(htmlCode, cssCode, jsCode) {
   return `<!DOCTYPE html>
@@ -108,6 +185,7 @@ function buildPreviewDocument(htmlCode, cssCode, jsCode) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>${CONSOLE_BRIDGE}<\/script>
 <style>
 ${cssCode}
 </style>
@@ -163,6 +241,11 @@ const previewFrame = document.getElementById("preview");
  * touch the main app's cookies — see the README roadmap.
  */
 function render() {
+  // Each run is fresh: clear logs from the previous render so the console
+  // reflects only the current preview (mirrors CodePen / devtools "preserve
+  // log off" behaviour).
+  clearConsole();
+
   const doc = buildPreviewDocument(
     readEditor(editors.html),
     readEditor(editors.css),
@@ -173,6 +256,56 @@ function render() {
   // the sandbox. Each assignment creates a NEW contentWindow.
   previewFrame.srcdoc = doc;
 }
+
+// ── Console panel ──────────────────────────────────────────────────────────────
+const consoleOutput = document.getElementById("console-output");
+const LEVELS = ["log", "info", "warn", "error", "debug"];
+
+function clearConsole() {
+  consoleOutput.replaceChildren();
+  const empty = document.createElement("div");
+  empty.className = "console-empty";
+  empty.textContent = "Console output from the preview appears here.";
+  consoleOutput.appendChild(empty);
+}
+
+function appendConsole(level, text) {
+  const placeholder = consoleOutput.querySelector(".console-empty");
+  if (placeholder) placeholder.remove();
+
+  const safeLevel = LEVELS.includes(level) ? level : "log";
+  const entry = document.createElement("div");
+  entry.className = "console-entry lvl-" + safeLevel;
+
+  const badge = document.createElement("span");
+  badge.className = "lvl";
+  badge.textContent = safeLevel;
+
+  const msg = document.createElement("span");
+  msg.className = "msg";
+  // textContent (never innerHTML): preview output is untrusted, so we render it
+  // as plain text and never let it inject markup into our trusted UI.
+  msg.textContent = text;
+
+  entry.append(badge, msg);
+  consoleOutput.appendChild(entry);
+  consoleOutput.scrollTop = consoleOutput.scrollHeight; // auto-follow newest
+}
+
+// Receive messages forwarded by the in-preview bridge.
+window.addEventListener("message", (event) => {
+  // SECURITY: the sandbox runs in an opaque origin, so `event.origin` is the
+  // string "null" and cannot be trusted. We authenticate by object identity
+  // instead — accept ONLY messages whose source is our preview's live window.
+  if (event.source !== previewFrame.contentWindow) return;
+
+  const data = event.data;
+  if (!data || data.__previewConsole !== true) return;
+
+  appendConsole(String(data.level || "log"), data.text == null ? "" : String(data.text));
+});
+
+document.getElementById("clear-console").addEventListener("click", clearConsole);
 
 // ── Toolbar: reset to defaults ────────────────────────────────────────────────
 document.getElementById("reset-btn").addEventListener("click", () => {
