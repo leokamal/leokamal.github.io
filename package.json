@@ -1,0 +1,31 @@
+{
+  "name": "live-static-preview",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A CodePen-style live HTML/CSS/JS preview tool built with vanilla JS + CodeMirror 6. Runs with no build step.",
+  "keywords": [
+    "codemirror",
+    "playground",
+    "live-preview",
+    "sandbox",
+    "iframe",
+    "no-build"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "start": "npx --yes serve .",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "comment": "DEFAULT MODE NEEDS NO INSTALL: `npm start` just serves the files; CodeMirror loads from the CDN via the import map in index.html. The devDependencies below are ONLY for the optional Vite build path (npm install && npm run build), which vendors CodeMirror and removes the CDN dependency.",
+  "devDependencies": {
+    "@codemirror/lang-css": "^6",
+    "@codemirror/lang-html": "^6",
+    "@codemirror/lang-javascript": "^6",
+    "@codemirror/theme-one-dark": "^6",
+    "codemirror": "^6",
+    "vite": "^5"
+  }
+}

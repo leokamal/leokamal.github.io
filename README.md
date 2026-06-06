@@ -27,17 +27,15 @@ modules over the `file://` protocol (see [Why a server?](#why-a-server)).
 Pick whichever you have:
 
 ```bash
-# Node (no install — uses npx)
-npx serve .
+npm start              # convenience wrapper for `npx serve .` (no install needed)
 
-# or Python 3
-python -m http.server 8000
-
-# or PHP
-php -S localhost:8000
+# …or any static server:
+npx serve .            # Node
+python -m http.server  # Python 3
+php -S localhost:8000  # PHP
 ```
 
-Then open the printed URL (e.g. <http://localhost:8000>).
+Then open the printed URL (e.g. <http://localhost:3000>).
 
 > **Opening `index.html` directly?** That works in **Firefox** (it allows
 > `file://` modules) but **not Chrome/Edge** (they block them for security). Use
@@ -55,20 +53,20 @@ The brief allowed either *"runs by opening `index.html`"* **or** *"a minimal
 Vite setup."* I chose **no build step**, loading CodeMirror 6's ES-module
 packages from a CDN through a native [`<script type="importmap">`](index.html).
 
-**Why:** it keeps the deliverable to exactly three source files (`index.html`,
-`style.css`, `app.js`) with **zero `npm install`, zero tooling, and nothing to
-audit but the code itself** — which matters most for the security-sensitive
-sandbox logic. CodeMirror 6 is the only dependency, and the import map's
-`?deps=@codemirror/state@6,@codemirror/view@6` query pins its shared peer
-packages to a single version so the editor instances don't desync.
+**Why:** it ships as plain files with **zero `npm install`, zero tooling, and
+nothing to audit but the code itself** — which matters most for the
+security-sensitive sandbox logic. CodeMirror 6 is the only runtime dependency,
+and the import map's `?deps=@codemirror/state@6,@codemirror/view@6` query pins
+its shared peer packages to a single version so the editor instances don't
+desync.
 
 **The trade-off** is a runtime dependency on the CDN and the `file://` caveat
-above. For production you'd vendor CodeMirror and bundle — and because `app.js`
-imports the packages by their bare names, **the exact same `app.js` works under
-Vite unchanged**: add a `package.json`, `npm i codemirror @codemirror/lang-html
-@codemirror/lang-css @codemirror/lang-javascript @codemirror/theme-one-dark`,
-and run `vite`. Vite resolves the bare imports from `node_modules` and the
-import map is simply ignored. That migration is in the roadmap below.
+above. For production you'd vendor CodeMirror and bundle — and because the
+modules `import` the packages by their bare names, **the same source works under
+Vite unchanged**: run `npm install` (the dev dependencies are already declared
+in `package.json`) then `npm run build`. Vite resolves the bare imports from
+`node_modules` and the import map is simply ignored. That migration is in the
+roadmap below.
 
 ### Why a server?
 
@@ -106,7 +104,8 @@ modules load. This is a browser security rule, not a build requirement.
 
 ### Security model
 
-All of this is commented inline in [`app.js`](app.js); the essentials:
+All of this is commented inline in
+[`src/preview/PreviewRenderer.js`](src/preview/PreviewRenderer.js); the essentials:
 
 - **`sandbox="allow-scripts"` with no `allow-same-origin`.** The preview runs
   arbitrary user code, so it's given a unique **opaque (`"null"`) origin**: it
@@ -127,11 +126,56 @@ All of this is commented inline in [`app.js`](app.js); the essentials:
 
 ## Project structure
 
-| File          | Responsibility                                                        |
-| ------------- | --------------------------------------------------------------------- |
-| `index.html`  | Markup, the CodeMirror import map, the sandboxed iframe declaration.   |
-| `style.css`   | Dark theme, CSS-Grid layout with `fr`-based resizable tracks, responsive. |
-| `app.js`      | Editors, debounce, document builder, sandbox render, console bridge, resizers. |
+```
+.
+├── index.html                  # markup, import map, sandboxed <iframe>
+├── src/
+│   ├── main.js                 # composition root: builds + wires components
+│   ├── config/
+│   │   ├── constants.js        # tunable values (debounce, channel name, …)
+│   │   └── defaults.js         # starter HTML/CSS/JS
+│   ├── utils/
+│   │   └── debounce.js
+│   ├── editors/
+│   │   └── EditorManager.js    # owns the 3 CodeMirror editors
+│   ├── preview/
+│   │   ├── PreviewRenderer.js  # facade over the sandboxed iframe + msg auth
+│   │   ├── documentTemplate.js # pure: sources -> HTML document string
+│   │   └── consoleBridge.js    # the script injected INTO the preview
+│   ├── console/
+│   │   └── ConsolePanel.js     # console UI (renders via textContent)
+│   └── layout/
+│       └── ResizableGrid.js    # reusable drag/keyboard resizer
+└── styles/                     # main.css @imports the partials in cascade order
+    ├── main.css   tokens.css   base.css     layout.css
+    ├── components.css          editor.css   console.css  responsive.css
+```
+
+### Architecture & design
+
+Each module has **one responsibility** and receives its dependencies through its
+constructor — nothing but `main.js` (the **composition root**) touches the global
+`document`. That keeps every component decoupled and unit-testable in isolation.
+
+Patterns applied where they earn their keep:
+
+| Pattern | Where | Why |
+| ------- | ----- | --- |
+| **Composition root / DI** | `main.js` | Single place that knows the wiring; components stay pure. |
+| **Facade** | `PreviewRenderer` | Hides iframe lifecycle, document building, and message auth behind `render()`. |
+| **Factory** | `EditorManager.#createView` | One place that knows how to build a configured editor. |
+| **Strategy** | `LANGUAGE_STRATEGIES` map | Adding a language is a one-line table entry. |
+| **Pure function** | `documentTemplate`, `debounce` | No side effects → trivial to test. |
+| **Observer** | editor `updateListener`, `message` listener, resize pointer events | React to changes via callbacks instead of polling. |
+
+I deliberately **did not** add a global event bus or a state-management library:
+with three collaborators, explicit constructor wiring is clearer and easier to
+trace than indirection. Good structure is also knowing which patterns to skip.
+
+The CSS mirrors this: design tokens, layout, components, and responsive rules
+live in separate files that `styles/main.css` imports **in cascade order**.
+(`@import` adds request waterfalls, so a production build would concatenate
+them — see below.)
 
 ---
 
@@ -158,8 +202,8 @@ What I'd add to take this from playground to product:
 
 **Editing experience**
 - Vendor CodeMirror via **Vite** (remove the CDN runtime dependency, enable
-  offline use, tree-shake, hash assets for caching) — `app.js` is already
-  import-compatible.
+  offline use, tree-shake, hash assets, concatenate the CSS partials) — the
+  modules are already import-compatible, so `npm install && npm run build`.
 - Autocomplete, linting (ESLint/Stylelint in a worker), Emmet, Prettier format,
   multi-file support, library/CDN imports (Babel/TS transpile in a worker).
 - Layout presets, persisted pane sizes, light/dark toggle, vim/emacs keymaps.
