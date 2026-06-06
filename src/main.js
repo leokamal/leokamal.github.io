@@ -65,7 +65,7 @@ function bootstrap() {
   });
 
   wireLanguageSwitcher(byId("lang-select"), i18n);
-  wireEditorActions(editors, i18n);
+  wireEditorActions(editors);
 
   // Toolbar: load the demo into the editors.
   byId("load-example").addEventListener("click", () => {
@@ -92,7 +92,7 @@ function wireLanguageSwitcher(select, i18n) {
  * Wire every editor toolbar button (copy / paste / clear) to its editor and
  * give brief visual feedback on success/failure.
  */
-function wireEditorActions(editors, i18n) {
+function wireEditorActions(editors) {
   for (const btn of document.querySelectorAll(".icon-btn[data-action]")) {
     btn.addEventListener("click", async () => {
       const kind = btn.dataset.editor;

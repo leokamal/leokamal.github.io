@@ -10,11 +10,21 @@ A single-page, CodePen-style playground. Three editors — **HTML**, **CSS**, an
 ## Features
 
 - Three CodeMirror 6 editors with syntax highlighting and a dark theme.
+- Editors **start empty with placeholder hints** — type or paste your own code
+  and it previews immediately. **Load example** drops in demo code to start from.
+- Per-editor toolbar: **Copy**, **Paste**, **Clear** (Clipboard API, with
+  success/error feedback).
 - Live preview, **debounced ~300 ms**, rendered into a **sandboxed `<iframe>`**.
 - **Console panel** capturing `console.log/info/warn/error/debug` from the
   preview, plus uncaught errors and unhandled promise rejections.
-- **Resizable panes** (CSS Grid + drag handles, keyboard-accessible).
+- **Multi-language UI** — **Français** (default), **العربية** (RTL), **English** —
+  switchable from the top bar and remembered across reloads.
+- **Resizable panes** (CSS Grid + drag handles, keyboard-accessible, RTL-aware).
 - **Responsive**: collapses to a single stacked column on narrow screens.
+
+> **Clipboard note:** Copy/Paste use the async Clipboard API, which only works in
+> a **secure context** (https or `http://localhost`) and may ask permission the
+> first time. Served locally that's fine; opening over `file://` will disable it.
 
 ---
 
@@ -132,12 +142,16 @@ All of this is commented inline in
 ├── src/
 │   ├── main.js                 # composition root: builds + wires components
 │   ├── config/
-│   │   ├── constants.js        # tunable values (debounce, channel name, …)
-│   │   └── defaults.js         # starter HTML/CSS/JS
+│   │   ├── constants.js        # tunable values (debounce, channel, lang key)
+│   │   └── defaults.js         # EXAMPLE_SOURCES (demo for "Load example")
 │   ├── utils/
-│   │   └── debounce.js
+│   │   ├── debounce.js
+│   │   └── clipboard.js        # Clipboard API wrappers (copy / paste)
+│   ├── i18n/
+│   │   ├── translations.js     # fr (default) / ar (RTL) / en dictionaries
+│   │   └── I18n.js             # applies [data-i18n], sets <html> lang/dir
 │   ├── editors/
-│   │   └── EditorManager.js    # owns the 3 CodeMirror editors
+│   │   └── EditorManager.js    # owns the 3 editors; placeholders + copy/paste/clear
 │   ├── preview/
 │   │   ├── PreviewRenderer.js  # facade over the sandboxed iframe + msg auth
 │   │   ├── documentTemplate.js # pure: sources -> HTML document string
@@ -145,7 +159,7 @@ All of this is commented inline in
 │   ├── console/
 │   │   └── ConsolePanel.js     # console UI (renders via textContent)
 │   └── layout/
-│       └── ResizableGrid.js    # reusable drag/keyboard resizer
+│       └── ResizableGrid.js    # reusable drag/keyboard resizer (RTL-aware)
 └── styles/                     # main.css @imports the partials in cascade order
     ├── main.css   tokens.css   base.css     layout.css
     ├── components.css          editor.css   console.css  responsive.css
@@ -176,6 +190,27 @@ The CSS mirrors this: design tokens, layout, components, and responsive rules
 live in separate files that `styles/main.css` imports **in cascade order**.
 (`@import` adds request waterfalls, so a production build would concatenate
 them — see below.)
+
+### Internationalization (i18n)
+
+The UI ships in **French (default), Arabic (RTL), and English**, switchable from
+the top bar and persisted to `localStorage`.
+
+- **Markup stays the source of structure.** Translatable nodes carry
+  `data-i18n="key"` (sets `textContent`) or `data-i18n-title="key"` (sets
+  `title` + `aria-label`, for the icon-only toolbar buttons). `I18n.apply()`
+  walks those attributes — no string concatenation in JS.
+- **Non-DOM text** (editor placeholders, the console empty-state) is delivered
+  through an `onChange(lang, dict)` callback to the component that owns it.
+  Placeholders live in a CodeMirror **Compartment** so they re-translate without
+  disturbing whatever you've typed.
+- **RTL** sets `<html dir="rtl">`; the layout uses **logical properties**
+  (`border-inline-start`, `margin-inline-start`) and the resizer mirrors its
+  horizontal drag, so Arabic is a true right-to-left mirror. A tiny inline
+  script in `index.html` applies the saved direction before first paint to
+  avoid a flash.
+- Adding a language = one dictionary in `src/i18n/translations.js` (+ a
+  `<option>`); a smoke test enforces key parity across languages.
 
 ---
 
