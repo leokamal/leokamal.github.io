@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Static Preview</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!--
+      No build step: CodeMirror 6 is published as many small ES-module packages.
+      We load them straight from the esm.sh CDN through an import map, so `app.js`
+      can `import` them by their bare package names with no bundler.
+
+      `?deps=@codemirror/state@6,@codemirror/view@6` pins the shared peer
+      dependencies to a single version across every package. CM6 stores editor
+      configuration in "facets" whose identity is module-instance-bound; if two
+      packages loaded *different* copies of @codemirror/state you'd get the
+      classic "Unrecognized extension value" error. Pinning dedupes them.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "codemirror": "https://esm.sh/codemirror@6?deps=@codemirror/state@6,@codemirror/view@6",
+          "@codemirror/lang-html": "https://esm.sh/@codemirror/lang-html@6?deps=@codemirror/state@6,@codemirror/view@6",
+          "@codemirror/lang-css": "https://esm.sh/@codemirror/lang-css@6?deps=@codemirror/state@6,@codemirror/view@6",
+          "@codemirror/lang-javascript": "https://esm.sh/@codemirror/lang-javascript@6?deps=@codemirror/state@6,@codemirror/view@6",
+          "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark@6?deps=@codemirror/state@6,@codemirror/view@6"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">◧</span>
+        <h1>Live Static Preview</h1>
+      </div>
+      <div class="actions">
+        <span class="hint">Edits render live · ~300&nbsp;ms debounce</span>
+        <button id="reset-btn" class="btn" type="button">Reset</button>
+      </div>
+    </header>
+
+    <!--
+      Layout is a CSS grid. Resizable boundaries are real grid tracks: each
+      `.gutter` element sits in its own track, and dragging it rewrites a CSS
+      custom property on the parent grid (see style.css + the resizer in app.js).
+    -->
+    <main class="workspace" id="workspace">
+      <!-- ── Editors column (HTML / CSS / JS stacked) ───────────────────── -->
+      <section class="editors" id="editors" aria-label="Code editors">
+        <div class="pane editor-pane">
+          <div class="pane-head"><span class="dot dot-html"></span>HTML</div>
+          <div class="editor-host" id="editor-html"></div>
+        </div>
+
+        <div class="gutter gutter-row" data-resizer="ed1" role="separator"
+             aria-orientation="horizontal" tabindex="0"></div>
+
+        <div class="pane editor-pane">
+          <div class="pane-head"><span class="dot dot-css"></span>CSS</div>
+          <div class="editor-host" id="editor-css"></div>
+        </div>
+
+        <div class="gutter gutter-row" data-resizer="ed2" role="separator"
+             aria-orientation="horizontal" tabindex="0"></div>
+
+        <div class="pane editor-pane">
+          <div class="pane-head"><span class="dot dot-js"></span>JavaScript</div>
+          <div class="editor-host" id="editor-js"></div>
+        </div>
+      </section>
+
+      <!-- ── Main vertical drag handle (editors ↔ preview) ──────────────── -->
+      <div class="gutter gutter-col" data-resizer="main" role="separator"
+           aria-orientation="vertical" tabindex="0"></div>
+
+      <!-- ── Preview + console column ───────────────────────────────────── -->
+      <section class="preview-col" id="preview-col" aria-label="Preview and console">
+        <div class="pane preview-pane">
+          <div class="pane-head">
+            <span>Preview</span>
+            <span class="pane-head-meta">sandboxed iframe · allow-scripts</span>
+          </div>
+          <!--
+            SECURITY-CRITICAL. Full reasoning lives in app.js next to the code
+            that fills this frame. In short: sandbox="allow-scripts" runs the
+            user's JS but deliberately OMITS allow-same-origin, so the preview
+            executes in an opaque ("null") origin and cannot reach this page's
+            DOM, cookies, or storage. Never add allow-same-origin here.
+          -->
+          <iframe
+            id="preview"
+            class="preview-frame"
+            title="Live preview"
+            sandbox="allow-scripts"
+          ></iframe>
+        </div>
+
+        <div class="gutter gutter-row" data-resizer="console" role="separator"
+             aria-orientation="horizontal" tabindex="0"></div>
+
+        <div class="pane console-pane">
+          <div class="pane-head">
+            <span>Console</span>
+            <button id="clear-console" class="btn btn-ghost" type="button">Clear</button>
+          </div>
+          <div class="console-output" id="console-output" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
