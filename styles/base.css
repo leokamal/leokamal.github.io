@@ -25,13 +25,13 @@ body {
 
 /* Custom scrollbars (WebKit/Blink). */
 .console-output::-webkit-scrollbar,
-.cm-scroller::-webkit-scrollbar { width: 10px; height: 10px; }
+.code-input::-webkit-scrollbar { width: 10px; height: 10px; }
 .console-output::-webkit-scrollbar-thumb,
-.cm-scroller::-webkit-scrollbar-thumb {
+.code-input::-webkit-scrollbar-thumb {
   background: #30363d;
   border-radius: 6px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 .console-output::-webkit-scrollbar-thumb:hover,
-.cm-scroller::-webkit-scrollbar-thumb:hover { background: #3d444d; }
+.code-input::-webkit-scrollbar-thumb:hover { background: #3d444d; }

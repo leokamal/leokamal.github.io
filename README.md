@@ -2,14 +2,15 @@
 
 A single-page, CodePen-style playground. Three editors — **HTML**, **CSS**, and
 **JavaScript** — feed a **live preview** that re-renders as you type. Built with
-**vanilla JavaScript** + **CodeMirror 6**. No build step.
+**vanilla JavaScript** and plain `<textarea>` inputs: **no build step, no runtime
+dependencies.**
 
 > Layout: editors on the left (HTML / CSS / JS stacked), live preview and
 > console on the right, with draggable handles between every pane.
 
 ## Features
 
-- Three CodeMirror 6 editors with syntax highlighting and a dark theme.
+- Three plain-`<textarea>` editors (HTML / CSS / JS) with a dark, monospace look.
 - Editors **start empty with placeholder hints** — type or paste your own code
   and it previews immediately. **Load example** drops in demo code to start from.
 - Per-editor toolbar: **Copy**, **Paste**, **Clear** (Clipboard API, with
@@ -49,34 +50,27 @@ Then open the printed URL (e.g. <http://localhost:3000>).
 
 > **Opening `index.html` directly?** That works in **Firefox** (it allows
 > `file://` modules) but **not Chrome/Edge** (they block them for security). Use
-> a server for those — it's still zero build.
+> a server for those — it's still zero build. Note: the Clipboard buttons also
+> need a secure context (a server), as noted above.
 
-> **First load needs internet.** CodeMirror 6 is fetched from the
-> [esm.sh](https://esm.sh) CDN via an import map. After that the browser caches
-> it. For a fully offline/self-hosted build, see [Production roadmap](#production-roadmap).
+> **Works fully offline.** There are no CDN requests or runtime dependencies —
+> the editors are plain `<textarea>`s and all logic is local ES modules.
 
 ---
 
-## Why "no build step" (and not Vite)?
+## Why "no build step"?
 
 The brief allowed either *"runs by opening `index.html`"* **or** *"a minimal
-Vite setup."* I chose **no build step**, loading CodeMirror 6's ES-module
-packages from a CDN through a native [`<script type="importmap">`](index.html).
+Vite setup."* I chose **no build step**: the app is plain `index.html` +
+`styles/` + `src/` ES modules, with **zero `npm install`, zero tooling, and no
+runtime dependencies** — which matters most for the security-sensitive sandbox
+logic, where there's nothing to audit but the code itself.
 
-**Why:** it ships as plain files with **zero `npm install`, zero tooling, and
-nothing to audit but the code itself** — which matters most for the
-security-sensitive sandbox logic. CodeMirror 6 is the only runtime dependency,
-and the import map's `?deps=@codemirror/state@6,@codemirror/view@6` query pins
-its shared peer packages to a single version so the editor instances don't
-desync.
-
-**The trade-off** is a runtime dependency on the CDN and the `file://` caveat
-above. For production you'd vendor CodeMirror and bundle — and because the
-modules `import` the packages by their bare names, **the same source works under
-Vite unchanged**: run `npm install` (the dev dependencies are already declared
-in `package.json`) then `npm run build`. Vite resolves the bare imports from
-`node_modules` and the import map is simply ignored. That migration is in the
-roadmap below.
+The editors are plain `<textarea>` inputs, so there's no editor library to load.
+The only trade-off versus a real code editor is the loss of syntax highlighting
+and line numbers (see the roadmap for re-adding one). Vite remains available but
+**optional** — `npm install && npm run build` bundles and minifies the local
+modules into a production copy; nothing requires it to run.
 
 ### Why a server?
 
@@ -91,10 +85,10 @@ modules load. This is a browser security rule, not a build requirement.
 ## How it works
 
 ```
- ┌──────────┐  keystroke   ┌────────────┐  300ms   ┌───────────────────────┐
- │ 3 editors │ ───────────▶ │  debounce  │ ───────▶ │ buildPreviewDocument() │
- │ (CM6)     │              └────────────┘          └───────────┬───────────┘
- └──────────┘                                                    │ srcdoc
+ ┌───────────┐  keystroke  ┌────────────┐  300ms   ┌───────────────────────┐
+ │ 3 textarea│ ──────────▶ │  debounce  │ ───────▶ │ buildPreviewDocument() │
+ │ editors   │             └────────────┘          └───────────┬───────────┘
+ └───────────┘                                                  │ srcdoc
                                                                  ▼
  ┌────────────────────┐   postMessage    ┌──────────────────────────────────┐
  │ Console panel       │ ◀─────────────── │ sandboxed <iframe>  (allow-scripts │
@@ -177,10 +171,9 @@ Patterns applied where they earn their keep:
 | ------- | ----- | --- |
 | **Composition root / DI** | `main.js` | Single place that knows the wiring; components stay pure. |
 | **Facade** | `PreviewRenderer` | Hides iframe lifecycle, document building, and message auth behind `render()`. |
-| **Factory** | `EditorManager.#createView` | One place that knows how to build a configured editor. |
-| **Strategy** | `LANGUAGE_STRATEGIES` map | Adding a language is a one-line table entry. |
+| **Adapter** | `EditorManager` | Wraps the three `<textarea>`s behind a small source API (`getSources`/`setSource`/`insertText`), so the rest of the app never touches the DOM inputs. |
 | **Pure function** | `documentTemplate`, `debounce` | No side effects → trivial to test. |
-| **Observer** | editor `updateListener`, `message` listener, resize pointer events | React to changes via callbacks instead of polling. |
+| **Observer** | `input` events, `message` listener, resize pointer events | React to changes via callbacks instead of polling. |
 
 I deliberately **did not** add a global event bus or a state-management library:
 with three collaborators, explicit constructor wiring is clearer and easier to
@@ -200,10 +193,10 @@ the top bar and persisted to `localStorage`.
   `data-i18n="key"` (sets `textContent`) or `data-i18n-title="key"` (sets
   `title` + `aria-label`, for the icon-only toolbar buttons). `I18n.apply()`
   walks those attributes — no string concatenation in JS.
-- **Non-DOM text** (editor placeholders, the console empty-state) is delivered
-  through an `onChange(lang, dict)` callback to the component that owns it.
-  Placeholders live in a CodeMirror **Compartment** so they re-translate without
-  disturbing whatever you've typed.
+- **Editor placeholders** are native `<textarea>` placeholders carrying
+  `data-i18n-placeholder="key"`, re-translated by `I18n.apply()` like any other
+  attribute. The only text delivered via the `onChange(lang, dict)` callback is
+  the console empty-state, because it's rendered dynamically (not in the markup).
 - **RTL** sets `<html dir="rtl">`; the layout uses **logical properties**
   (`border-inline-start`, `margin-inline-start`) and the resizer mirrors its
   horizontal drag, so Arabic is a true right-to-left mirror. A tiny inline
@@ -236,17 +229,18 @@ What I'd add to take this from playground to product:
   CodeSandbox/StackBlitz."
 
 **Editing experience**
-- Vendor CodeMirror via **Vite** (remove the CDN runtime dependency, enable
-  offline use, tree-shake, hash assets, concatenate the CSS partials) — the
-  modules are already import-compatible, so `npm install && npm run build`.
-- Autocomplete, linting (ESLint/Stylelint in a worker), Emmet, Prettier format,
-  multi-file support, library/CDN imports (Babel/TS transpile in a worker).
-- Layout presets, persisted pane sizes, light/dark toggle, vim/emacs keymaps.
+- **Syntax highlighting + line numbers** by swapping the `<textarea>`s for a
+  real editor (CodeMirror 6 / Monaco). `EditorManager` already isolates the
+  editor behind a small API, so only that one module changes; bundle the editor
+  with the optional **Vite** build (`npm install && npm run build`).
+- Tab-to-indent, autocomplete, linting (ESLint/Stylelint in a worker), Emmet,
+  Prettier format, multi-file support, library/CDN imports.
+- Layout presets, persisted pane sizes, light/dark toggle.
 
 **Robustness & ops**
-- Graceful offline/CDN-failure banner; service worker for offline shell.
-- Tests: unit (document builder, debounce, message auth), and Playwright E2E
-  for the live-render + console-capture loop.
+- Service worker for an installable offline shell.
+- Tests: unit (document builder, debounce, message auth, EditorManager), and
+  Playwright E2E for the live-render + console-capture loop.
 - Telemetry/error reporting, and an allowlist/size cap on preview output.
 
 ---

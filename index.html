@@ -20,30 +20,11 @@
     <link rel="stylesheet" href="styles/main.css" />
 
     <!--
-      No build step: CodeMirror 6 is published as many small ES-module packages.
-      We load them straight from the esm.sh CDN through an import map, so the
-      modules under src/ can `import` them by their bare package names with no
-      bundler. (Import maps are page-global, so every module resolves through it.)
-
-      `?deps=@codemirror/state@6,@codemirror/view@6` pins the shared peer
-      dependencies to a single version across every package. CM6 stores editor
-      configuration in "facets" whose identity is module-instance-bound; if two
-      packages loaded *different* copies of @codemirror/state you'd get the
-      classic "Unrecognized extension value" error. Pinning dedupes them.
+      No build step and no external dependencies: the HTML/CSS/JS inputs are
+      plain <textarea> elements and all logic is local ES modules under src/.
+      Serve over http:// (e.g. `npm start`) — browsers block local ES modules
+      loaded over the file:// protocol.
     -->
-    <script type="importmap">
-      {
-        "imports": {
-          "codemirror": "https://esm.sh/codemirror@6?deps=@codemirror/state@6,@codemirror/view@6",
-          "@codemirror/state": "https://esm.sh/@codemirror/state@6",
-          "@codemirror/view": "https://esm.sh/@codemirror/view@6?deps=@codemirror/state@6",
-          "@codemirror/lang-html": "https://esm.sh/@codemirror/lang-html@6?deps=@codemirror/state@6,@codemirror/view@6",
-          "@codemirror/lang-css": "https://esm.sh/@codemirror/lang-css@6?deps=@codemirror/state@6,@codemirror/view@6",
-          "@codemirror/lang-javascript": "https://esm.sh/@codemirror/lang-javascript@6?deps=@codemirror/state@6,@codemirror/view@6",
-          "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark@6?deps=@codemirror/state@6,@codemirror/view@6"
-        }
-      }
-    </script>
   </head>
 
   <body>
@@ -104,7 +85,17 @@
               <button class="icon-btn" type="button" data-action="clear" data-editor="html" data-i18n-title="action.clear"><svg class="icon"><use href="#i-clear"></use></svg></button>
             </div>
           </div>
-          <div class="editor-host" id="editor-html"></div>
+          <textarea
+            id="editor-html"
+            class="code-input"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            aria-label="HTML"
+            data-i18n-placeholder="placeholder.html"
+            placeholder="Écrivez ou collez votre HTML ici…"
+          ></textarea>
         </div>
 
         <div class="gutter gutter-row" data-resizer="ed1" role="separator"
@@ -120,7 +111,17 @@
               <button class="icon-btn" type="button" data-action="clear" data-editor="css" data-i18n-title="action.clear"><svg class="icon"><use href="#i-clear"></use></svg></button>
             </div>
           </div>
-          <div class="editor-host" id="editor-css"></div>
+          <textarea
+            id="editor-css"
+            class="code-input"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            aria-label="CSS"
+            data-i18n-placeholder="placeholder.css"
+            placeholder="Écrivez ou collez votre CSS ici…"
+          ></textarea>
         </div>
 
         <div class="gutter gutter-row" data-resizer="ed2" role="separator"
@@ -136,7 +137,17 @@
               <button class="icon-btn" type="button" data-action="clear" data-editor="js" data-i18n-title="action.clear"><svg class="icon"><use href="#i-clear"></use></svg></button>
             </div>
           </div>
-          <div class="editor-host" id="editor-js"></div>
+          <textarea
+            id="editor-js"
+            class="code-input"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            aria-label="JavaScript"
+            data-i18n-placeholder="placeholder.js"
+            placeholder="Écrivez ou collez votre JavaScript ici…"
+          ></textarea>
         </div>
       </section>
 

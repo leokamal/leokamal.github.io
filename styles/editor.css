@@ -1,19 +1,29 @@
-/* Editor host + CodeMirror overrides.
+/* Plain-textarea code editors (HTML / CSS / JS).
 
-   These stay UNLAYERED (see main.css): CodeMirror injects its base theme as an
-   unlayered <style> at runtime, and unlayered rules outrank any @layer, so our
-   overrides must be unlayered to win on normal specificity/source order. */
+   No editor library — just a styled multiline input that fills its pane and
+   scrolls. Placeholder ghost text is the native textarea placeholder. */
 
-.editor-host {
+.code-input {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
-  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 12px;
+  border: 0;
+  resize: none;
+  background: var(--code-bg);
+  color: var(--text);
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas,
+    monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  tab-size: 2;
+  white-space: pre-wrap; /* wrap long lines, preserve indentation */
+  overflow: auto;
 }
+/* Code is direction-neutral: keep it LTR even when the UI is RTL (Arabic). */
+.code-input { direction: ltr; text-align: left; }
 
-.cm-editor { height: 100%; font-size: 13px; }
-.cm-editor .cm-scroller { overflow: auto; }
-.cm-editor.cm-focused { outline: none; }
-
-/* Placeholder ghost text shown while an editor is empty. */
-.cm-editor .cm-placeholder { color: var(--text-dim); font-style: italic; }
+.code-input:focus { outline: none; box-shadow: inset 0 2px 0 0 var(--accent); }
+.code-input::placeholder { color: var(--text-dim); font-style: italic; opacity: 1; }

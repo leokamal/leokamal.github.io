@@ -8,10 +8,8 @@
      components, editor, console → painted UI
      responsive → must come LAST so its media query overrides the above
 
-   (We intentionally avoid @layer here: CodeMirror injects UNLAYERED styles at
-   runtime, and unlayered rules beat any @layer, so our editor overrides must
-   stay unlayered too. For production these files would be concatenated into one
-   request — see the README.)
+   (For production these files would be concatenated into one request to avoid
+   the @import waterfall — see the README.)
    ============================================================================= */
 
 @import url("./tokens.css");

@@ -20,19 +20,13 @@ import { ResizableGrid } from "./layout/ResizableGrid.js";
 function bootstrap() {
   const byId = (id) => document.getElementById(id);
 
-  // i18n first so every component can be built with the right language. The
-  // onChange callback pushes non-DOM text (placeholders, console empty-state)
-  // into the components that own it. `editors`/`consolePanel` are referenced
-  // lazily here and only invoked from apply() below, after they exist.
+  // i18n first so the console empty-state can be built with the right language.
+  // Editor placeholders + all labelled markup are handled declaratively inside
+  // I18n.apply(); only the dynamically-rendered console empty-state needs this
+  // callback. `consolePanel` is referenced lazily (invoked from apply() below,
+  // after it exists).
   const i18n = new I18n({
-    onChange: (_lang, dict) => {
-      editors.setPlaceholders({
-        html: dict["placeholder.html"],
-        css: dict["placeholder.css"],
-        js: dict["placeholder.js"],
-      });
-      consolePanel.setEmptyText(dict["console.empty"]);
-    },
+    onChange: (_lang, dict) => consolePanel.setEmptyText(dict["console.empty"]),
   });
   const dict = i18n.dict();
 
@@ -51,27 +45,18 @@ function bootstrap() {
     onConsoleMessage: (message) => consolePanel.append(message),
   });
 
-  // Editors — start empty with translated placeholders; a doc edit schedules a
-  // debounced re-render of the preview.
+  // Editors — empty <textarea>s with native placeholders; any edit (typed or
+  // programmatic) schedules a debounced re-render of the preview.
   const editors = new EditorManager({
     mounts: { html: byId("editor-html"), css: byId("editor-css"), js: byId("editor-js") },
-    sources: { html: "", css: "", js: "" },
-    placeholders: {
-      html: dict["placeholder.html"],
-      css: dict["placeholder.css"],
-      js: dict["placeholder.js"],
-    },
     onChange: debounce(() => preview.render(editors.getSources()), PREVIEW_DEBOUNCE_MS),
   });
 
   wireLanguageSwitcher(byId("lang-select"), i18n);
   wireEditorActions(editors);
 
-  // Toolbar: load the demo into the editors.
-  byId("load-example").addEventListener("click", () => {
-    editors.setSources(EXAMPLE_SOURCES);
-    preview.render(editors.getSources());
-  });
+  // Toolbar: load the demo into the editors (setSources triggers the re-render).
+  byId("load-example").addEventListener("click", () => editors.setSources(EXAMPLE_SOURCES));
 
   setupResizableLayout();
 

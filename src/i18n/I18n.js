@@ -4,11 +4,11 @@
  * @module i18n/I18n
  *
  * DOM contract (declarative — markup stays the source of truth for structure):
- *   [data-i18n]        -> element.textContent
- *   [data-i18n-title]  -> element.title AND aria-label (for icon-only buttons)
- * Non-DOM text (editor placeholders, console empty-state) is delivered to the
- * app through the `onChange(lang, dict)` callback so the owning components
- * update themselves.
+ *   [data-i18n]             -> element.textContent
+ *   [data-i18n-title]       -> element.title AND aria-label (icon-only buttons)
+ *   [data-i18n-placeholder] -> element.placeholder (the <textarea> editors)
+ * Remaining non-DOM text (the console empty-state, which is rendered
+ * dynamically) is delivered through the `onChange(lang, dict)` callback.
  */
 
 import {
@@ -96,6 +96,10 @@ export class I18n {
         el.title = value;
         el.setAttribute("aria-label", value);
       }
+    }
+    for (const el of document.querySelectorAll("[data-i18n-placeholder]")) {
+      const value = dict[el.getAttribute("data-i18n-placeholder")];
+      if (value != null) el.placeholder = value;
     }
 
     if (dict["app.title"]) document.title = dict["app.title"];
