@@ -20,13 +20,16 @@
   --radius: 8px;
 
   /* Resizable track sizes. These custom properties are the single source of
-     truth for the grid layout; the drag handles in app.js rewrite them. */
-  --ws-col: 1fr;   /* editors column width            (workspace) */
-  --ed-r1:  1fr;   /* HTML editor height              (editors)   */
-  --ed-r2:  1fr;   /* CSS  editor height              (editors)   */
-  --ed-r3:  1fr;   /* JS   editor height              (editors)   */
-  --pv-row: 1fr;   /* preview height                  (preview)   */
-  --cs-row: 220px; /* console height                  (preview)   */
+     truth for the grid layout; the drag handles in app.js rewrite them. They
+     are kept in `fr` units so the layout stays proportional when the window
+     resizes, and a drag only ever moves the boundary between two neighbours. */
+  --ws-c1: 1fr;    /* editors column width            (workspace) */
+  --ws-c2: 1fr;    /* preview column width            (workspace) */
+  --ed-r1: 1fr;    /* HTML editor height              (editors)   */
+  --ed-r2: 1fr;    /* CSS  editor height              (editors)   */
+  --ed-r3: 1fr;    /* JS   editor height              (editors)   */
+  --pv-r1: 2.4fr;  /* preview height                  (preview)   */
+  --pv-r2: 1fr;    /* console height                  (preview)   */
 }
 
 * { box-sizing: border-box; }
@@ -84,7 +87,7 @@ body {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: var(--ws-col) var(--gutter-size) 1fr;
+  grid-template-columns: var(--ws-c1) var(--gutter-size) var(--ws-c2);
   overflow: hidden;
 }
 
@@ -96,6 +99,8 @@ body {
     var(--ed-r2) var(--gutter-size)
     var(--ed-r3);
   min-width: 0;
+  /* fr tracks can otherwise be sized by their content (the editor) and refuse
+     to shrink; min-height:0 on the panes (below) lets them shrink freely. */
   min-height: 0;
   overflow: hidden;
 }
@@ -103,7 +108,7 @@ body {
 /* Preview column: preview | gutter | console */
 .preview-col {
   display: grid;
-  grid-template-rows: var(--pv-row) var(--gutter-size) var(--cs-row);
+  grid-template-rows: var(--pv-r1) var(--gutter-size) var(--pv-r2);
   min-width: 0;
   min-height: 0;
   overflow: hidden;

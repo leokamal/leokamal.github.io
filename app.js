@@ -315,5 +315,136 @@ document.getElementById("reset-btn").addEventListener("click", () => {
   render();
 });
 
+// ── Resizable panes ───────────────────────────────────────────────────────────
+//
+// Each `.gutter` is a real grid track. Dragging it rewrites the `fr` values of
+// the two NEIGHBOURING tracks via CSS custom properties — one grows by exactly
+// what the other shrinks, so the rest of the layout is untouched. Working in
+// `fr` (not px) keeps everything proportional when the window resizes.
+//
+// We use Pointer Events with setPointerCapture so the drag keeps tracking even
+// when the cursor passes over the preview <iframe> (which would otherwise
+// swallow the mouse events).
+
+const gutters = {};
+document
+  .querySelectorAll(".gutter[data-resizer]")
+  .forEach((g) => (gutters[g.dataset.resizer] = g));
+
+const sizeOf = (el, horizontal) => {
+  const r = el.getBoundingClientRect();
+  return horizontal ? r.width : r.height;
+};
+
+function setupResizableGrid(container, axis, trackVars, initialFr, handles) {
+  const horizontal = axis === "x";
+  const MIN_PX = 60; // a pane can never be dragged smaller than this
+  const fr = initialFr.slice();
+
+  const apply = () =>
+    trackVars.forEach((v, i) => container.style.setProperty(v, fr[i] + "fr"));
+  apply(); // mirror the initial fr state into inline styles
+
+  // Move the boundary of handle `h` by `deltaFr`, clamped so neither neighbour
+  // collapses below MIN_PX.
+  function moveBoundary(h, beforeFr, afterFr, minFr) {
+    let nb = beforeFr;
+    let na = afterFr;
+    if (nb < minFr) { na -= minFr - nb; nb = minFr; }
+    if (na < minFr) { nb -= minFr - na; na = minFr; }
+    fr[h.before] = nb;
+    fr[h.after] = na;
+    apply();
+  }
+
+  const metrics = (h) => {
+    const px = sizeOf(h.beforePane, horizontal) + sizeOf(h.afterPane, horizontal);
+    const pxPerFr = px / (fr[h.before] + fr[h.after]) || 1;
+    return { pxPerFr, minFr: MIN_PX / pxPerFr };
+  };
+
+  for (const h of handles) {
+    // Pointer drag
+    h.el.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      h.el.setPointerCapture(e.pointerId);
+      h.el.classList.add("dragging");
+
+      const startPos = horizontal ? e.clientX : e.clientY;
+      const startBefore = fr[h.before];
+      const startAfter = fr[h.after];
+      const { pxPerFr, minFr } = metrics(h);
+
+      const onMove = (ev) => {
+        const delta = (horizontal ? ev.clientX : ev.clientY) - startPos;
+        const df = delta / pxPerFr;
+        moveBoundary(h, startBefore + df, startAfter - df, minFr);
+      };
+      const onUp = () => {
+        h.el.classList.remove("dragging");
+        h.el.removeEventListener("pointermove", onMove);
+        h.el.removeEventListener("pointerup", onUp);
+        h.el.removeEventListener("pointercancel", onUp);
+      };
+      h.el.addEventListener("pointermove", onMove);
+      h.el.addEventListener("pointerup", onUp);
+      h.el.addEventListener("pointercancel", onUp);
+    });
+
+    // Keyboard a11y: the separator is focusable; arrow keys nudge it.
+    h.el.addEventListener("keydown", (e) => {
+      const keys = horizontal ? ["ArrowLeft", "ArrowRight"] : ["ArrowUp", "ArrowDown"];
+      const dir = keys.indexOf(e.key);
+      if (dir === -1) return;
+      e.preventDefault();
+      const { pxPerFr, minFr } = metrics(h);
+      const df = (24 / pxPerFr) * (dir === 0 ? -1 : 1); // ~24px per keypress
+      moveBoundary(h, fr[h.before] + df, fr[h.after] - df, minFr);
+    });
+  }
+}
+
+const editorsEl = document.getElementById("editors");
+const previewColEl = document.getElementById("preview-col");
+const editorPanes = editorsEl.querySelectorAll(".editor-pane");
+
+// Editors ↔ preview (vertical handle)
+setupResizableGrid(
+  document.getElementById("workspace"),
+  "x",
+  ["--ws-c1", "--ws-c2"],
+  [1, 1],
+  [{ el: gutters.main, before: 0, after: 1, beforePane: editorsEl, afterPane: previewColEl }]
+);
+
+// HTML / CSS / JS (two horizontal handles)
+setupResizableGrid(
+  editorsEl,
+  "y",
+  ["--ed-r1", "--ed-r2", "--ed-r3"],
+  [1, 1, 1],
+  [
+    { el: gutters.ed1, before: 0, after: 1, beforePane: editorPanes[0], afterPane: editorPanes[1] },
+    { el: gutters.ed2, before: 1, after: 2, beforePane: editorPanes[1], afterPane: editorPanes[2] },
+  ]
+);
+
+// Preview ↔ console (horizontal handle)
+setupResizableGrid(
+  previewColEl,
+  "y",
+  ["--pv-r1", "--pv-r2"],
+  [2.4, 1],
+  [
+    {
+      el: gutters.console,
+      before: 0,
+      after: 1,
+      beforePane: previewColEl.querySelector(".preview-pane"),
+      afterPane: previewColEl.querySelector(".console-pane"),
+    },
+  ]
+);
+
 // ── First paint ───────────────────────────────────────────────────────────────
 render();
