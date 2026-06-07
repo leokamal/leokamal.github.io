@@ -1,5 +1,5 @@
 /* =============================================================================
-   Live Static Preview — stylesheet entry point.
+   ElmagWebView — stylesheet entry point.
 
    Import ORDER == cascade order, so these run general -> specific:
      tokens  → design variables (no rules)

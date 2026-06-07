@@ -102,7 +102,11 @@ export class I18n {
       if (value != null) el.placeholder = value;
     }
 
-    if (dict["app.title"]) document.title = dict["app.title"];
+    // Browser tab: "Brand — tagline" (brand only if no tagline).
+    if (dict["app.title"]) {
+      const tagline = dict["app.tagline"];
+      document.title = tagline ? `${dict["app.title"]} — ${tagline}` : dict["app.title"];
+    }
 
     this.#onChange?.(this.#lang, dict);
   }

@@ -25,8 +25,8 @@ export const LANG_NAMES = Object.freeze({ fr: "Français", ar: "العربية",
 /** @type {Readonly<Record<string, Dictionary>>} */
 export const TRANSLATIONS = Object.freeze({
   fr: {
-    "app.title": "Aperçu statique en direct",
-    "header.hint": "Rendu en direct · anti-rebond ~300 ms",
+    "app.title": "ElmagWebView",
+    "app.tagline": "éditeur HTML · CSS · JS en direct",
     "lang.switchLabel": "Langue",
     "action.loadExample": "Charger l'exemple",
     "action.copy": "Copier",
@@ -43,8 +43,8 @@ export const TRANSLATIONS = Object.freeze({
   },
 
   ar: {
-    "app.title": "معاينة ثابتة مباشرة",
-    "header.hint": "عرض مباشر · بتأخير ~300 مللي ثانية",
+    "app.title": "ElmagWebView",
+    "app.tagline": "محرر HTML · CSS · JS مباشر",
     "lang.switchLabel": "اللغة",
     "action.loadExample": "تحميل مثال",
     "action.copy": "نسخ",
@@ -61,8 +61,8 @@ export const TRANSLATIONS = Object.freeze({
   },
 
   en: {
-    "app.title": "Live Static Preview",
-    "header.hint": "Edits render live · ~300 ms debounce",
+    "app.title": "ElmagWebView",
+    "app.tagline": "live HTML · CSS · JS editor",
     "lang.switchLabel": "Language",
     "action.loadExample": "Load example",
     "action.copy": "Copy",

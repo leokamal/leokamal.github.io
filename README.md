@@ -1,9 +1,11 @@
-# Live Static Preview
+# ElmagWebView
 
 A single-page, CodePen-style playground. Three editors — **HTML**, **CSS**, and
 **JavaScript** — feed a **live preview** that re-renders as you type. Built with
 **vanilla JavaScript** and plain `<textarea>` inputs: **no build step, no runtime
 dependencies.**
+
+> UI in **Français** (default), **العربية** (RTL), and **English**.
 
 > Layout: editors on the left (HTML / CSS / JS stacked), live preview and
 > console on the right, with draggable handles between every pane.

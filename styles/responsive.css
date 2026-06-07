@@ -3,7 +3,7 @@
 
 @media (max-width: 860px) {
   body { overflow: auto; height: auto; min-height: 100%; }
-  .hint { display: none; }
+  .tagline { display: none; }
 
   /* Collapse the grids to a simple vertical flow and drop the drag handles. */
   .workspace,

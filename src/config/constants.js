@@ -29,4 +29,4 @@ export const CONSOLE_LEVELS = Object.freeze(["log", "info", "warn", "error", "de
  * localStorage key for the chosen UI language. Also referenced by the inline
  * anti-FOUC script in index.html, so keep the two in sync.
  */
-export const LANG_STORAGE_KEY = "lsp:lang";
+export const LANG_STORAGE_KEY = "elmagwebview:lang";

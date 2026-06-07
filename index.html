@@ -5,15 +5,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Aperçu statique en direct</title>
+    <title>ElmagWebView</title>
 
     <!-- Anti-FOUC: apply the saved language's direction before CSS paints.
          Mirrors the storage key + RTL set used by src/i18n. -->
     <script>
       try {
-        var lspLang = localStorage.getItem("lsp:lang") || "fr";
-        document.documentElement.lang = lspLang;
-        document.documentElement.dir = lspLang === "ar" ? "rtl" : "ltr";
+        var ewvLang = localStorage.getItem("elmagwebview:lang") || "fr";
+        document.documentElement.lang = ewvLang;
+        document.documentElement.dir = ewvLang === "ar" ? "rtl" : "ltr";
       } catch (e) {}
     </script>
 
@@ -48,11 +48,12 @@
     <header class="topbar">
       <div class="brand">
         <span class="logo" aria-hidden="true">◧</span>
-        <h1 data-i18n="app.title">Aperçu statique en direct</h1>
+        <div class="brand-text">
+          <h1 data-i18n="app.title">ElmagWebView</h1>
+          <span class="tagline" data-i18n="app.tagline">éditeur HTML · CSS · JS en direct</span>
+        </div>
       </div>
       <div class="actions">
-        <span class="hint" data-i18n="header.hint">Rendu en direct · anti-rebond ~300&nbsp;ms</span>
-
         <!-- Language switcher. Option labels stay in their native script. -->
         <select id="lang-select" class="lang-select" data-i18n-title="lang.switchLabel">
           <option value="fr">Français</option>

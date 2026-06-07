@@ -12,10 +12,11 @@
   border-bottom: 1px solid var(--border);
 }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand .logo { color: var(--accent); font-size: 20px; line-height: 1; }
-.brand h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: .01em; }
+.brand .logo { color: var(--accent); font-size: 22px; line-height: 1; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+.tagline { color: var(--text-dim); font-size: 11px; }
 .actions { display: flex; align-items: center; gap: 14px; }
-.hint { color: var(--text-dim); font-size: 12px; }
 
 /* ── Buttons ──────────────────────────────────────────────────────────── */
 .btn {
