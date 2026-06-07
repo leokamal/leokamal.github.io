@@ -33,6 +33,25 @@
   border-inline-start: 1px solid var(--border); /* logical: flips for RTL */
 }
 
+/* Maximized preview: the preview pane takes over the whole workspace —
+   editors, console, and the handles between them collapse. Overrides the
+   var()-based templates above (higher specificity), so the dragged track
+   sizes are preserved and reappear the moment the class is removed. */
+.workspace.preview-max {
+  grid-template-columns: 1fr;
+}
+.workspace.preview-max .editors,
+.workspace.preview-max > .gutter-col {
+  display: none;
+}
+.workspace.preview-max .preview-col {
+  grid-template-rows: 1fr;
+}
+.workspace.preview-max .preview-col > .gutter-row,
+.workspace.preview-max .console-pane {
+  display: none;
+}
+
 /* Drag handles — each is a real grid track. */
 .gutter {
   background: var(--border);

@@ -56,15 +56,6 @@ export class EditorManager {
     this.#onChange?.();
   }
 
-  /**
-   * Replace the contents of every editor (used by "Load example").
-   * @param {Record<SourceKind, string>} sources
-   */
-  setSources(sources) {
-    for (const kind of KINDS) this.#inputs[kind].value = sources[kind] ?? "";
-    this.#onChange?.();
-  }
-
   /** Empty one editor (the placeholder reappears). @param {SourceKind} kind */
   clear(kind) {
     this.setSource(kind, "");

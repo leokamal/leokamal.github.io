@@ -134,6 +134,12 @@
 .dot-css  { background: #2965f1; }
 .dot-js   { background: #f0db4f; }
 
+/* Maximize/restore toggle: show the icon for the action the click performs —
+   "maximize" while normal, "restore" while the workspace is maximized. */
+.preview-max-btn .icon-restore { display: none; }
+.workspace.preview-max .preview-max-btn .icon-maximize { display: none; }
+.workspace.preview-max .preview-max-btn .icon-restore { display: inline; }
+
 /* ── Preview frame ────────────────────────────────────────────────────── */
 .preview-frame {
   flex: 1 1 auto;

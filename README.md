@@ -14,10 +14,11 @@ dependencies.**
 
 - Three plain-`<textarea>` editors (HTML / CSS / JS) with a dark, monospace look.
 - Editors **start empty with placeholder hints** — type or paste your own code
-  and it previews immediately. **Load example** drops in demo code to start from.
+  and it previews immediately.
 - Per-editor toolbar: **Copy**, **Paste**, **Clear** (Clipboard API, with
   success/error feedback).
-- Live preview, **debounced ~300 ms**, rendered into a **sandboxed `<iframe>`**.
+- Live preview, **debounced ~300 ms**, rendered into a **sandboxed `<iframe>`**,
+  with a **maximize toggle** that expands the preview to fill the workspace.
 - **Console panel** capturing `console.log/info/warn/error/debug` from the
   preview, plus uncaught errors and unhandled promise rejections.
 - **Multi-language UI** — **Français** (default), **العربية** (RTL), **English** —
@@ -138,8 +139,7 @@ All of this is commented inline in
 ├── src/
 │   ├── main.js                 # composition root: builds + wires components
 │   ├── config/
-│   │   ├── constants.js        # tunable values (debounce, channel, lang key)
-│   │   └── defaults.js         # EXAMPLE_SOURCES (demo for "Load example")
+│   │   └── constants.js        # tunable values (debounce, channel, lang key)
 │   ├── utils/
 │   │   ├── debounce.js
 │   │   └── clipboard.js        # Clipboard API wrappers (copy / paste)

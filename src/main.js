@@ -7,7 +7,6 @@
  * @module main
  */
 
-import { EXAMPLE_SOURCES } from "./config/defaults.js";
 import { PREVIEW_DEBOUNCE_MS } from "./config/constants.js";
 import { debounce } from "./utils/debounce.js";
 import { copyText, readClipboardText } from "./utils/clipboard.js";
@@ -54,9 +53,7 @@ function bootstrap() {
 
   wireLanguageSwitcher(byId("lang-select"), i18n);
   wireEditorActions(editors);
-
-  // Toolbar: load the demo into the editors (setSources triggers the re-render).
-  byId("load-example").addEventListener("click", () => editors.setSources(EXAMPLE_SOURCES));
+  wirePreviewMaximize(byId("toggle-preview-max"), byId("workspace"), i18n);
 
   setupResizableLayout();
 
@@ -95,6 +92,27 @@ function wireEditorActions(editors) {
       }
     });
   }
+}
+
+/**
+ * Toggle "maximized preview" mode: the preview pane fills the workspace while
+ * the editors and console collapse (see `.preview-max` in styles/layout.css).
+ * The state lives in one class on the workspace; the button's icon (CSS),
+ * pressed state, and tooltip track it. We keep `data-i18n-title` pointing at
+ * the active state's key so a later language switch stays correct — I18n.apply()
+ * reads that attribute — and mirror it into title/aria-label here for the
+ * immediate update without re-running a full translation pass.
+ */
+function wirePreviewMaximize(button, workspace, i18n) {
+  const sync = (maximized) => {
+    const key = maximized ? "action.restore" : "action.maximize";
+    button.setAttribute("data-i18n-title", key);
+    button.title = i18n.t(key);
+    button.setAttribute("aria-label", i18n.t(key));
+    button.setAttribute("aria-pressed", String(maximized));
+  };
+  button.addEventListener("click", () => sync(workspace.classList.toggle("preview-max")));
+  sync(false);
 }
 
 /** Add a state class for a moment to acknowledge an action. */

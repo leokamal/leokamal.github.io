@@ -43,6 +43,18 @@
         <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
       </symbol>
+      <symbol id="i-maximize" viewBox="0 0 24 24">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </symbol>
+      <symbol id="i-minimize" viewBox="0 0 24 24">
+        <polyline points="4 14 10 14 10 20"></polyline>
+        <polyline points="20 10 14 10 14 4"></polyline>
+        <line x1="14" y1="10" x2="21" y2="3"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </symbol>
     </svg>
 
     <header class="topbar">
@@ -60,10 +72,6 @@
           <option value="ar">العربية</option>
           <option value="en">English</option>
         </select>
-
-        <button id="load-example" class="btn" type="button" data-i18n="action.loadExample">
-          Charger l'exemple
-        </button>
       </div>
     </header>
 
@@ -162,6 +170,10 @@
           <div class="pane-head">
             <span data-i18n="preview.title">Aperçu</span>
             <span class="pane-head-meta" data-i18n="preview.meta">iframe isolé · allow-scripts</span>
+            <button id="toggle-preview-max" class="icon-btn preview-max-btn" type="button" aria-pressed="false" data-i18n-title="action.maximize">
+              <svg class="icon icon-maximize"><use href="#i-maximize"></use></svg>
+              <svg class="icon icon-restore"><use href="#i-minimize"></use></svg>
+            </button>
           </div>
           <!--
             SECURITY-CRITICAL. Full reasoning lives in
